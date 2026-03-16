@@ -7,6 +7,15 @@ struct DockerView: View {
     @State private var selectedContainerID: String?
     @State private var showInspector = false
     @State private var isLoading = true
+    @State private var searchText = ""
+
+    private var filteredContainers: [DockerContainer] {
+        if searchText.isEmpty { return containers }
+        return containers.filter {
+            $0.name.localizedCaseInsensitiveContains(searchText) ||
+            $0.image.localizedCaseInsensitiveContains(searchText)
+        }
+    }
 
     private var selectedContainer: DockerContainer? {
         guard let id = selectedContainerID else { return nil }
@@ -27,6 +36,7 @@ struct DockerView: View {
                 containerTable
             }
         }
+        .searchable(text: $searchText, prompt: "Filter containers")
         .toolbar {
             ToolbarItem(placement: .automatic) {
                 Button {
@@ -34,6 +44,7 @@ struct DockerView: View {
                 } label: {
                     Label("Refresh", systemImage: "arrow.clockwise")
                 }
+                .keyboardShortcut("r", modifiers: .command)
             }
 
             if !containers.isEmpty {
@@ -63,7 +74,7 @@ struct DockerView: View {
     }
 
     private var containerTable: some View {
-        Table(containers, selection: $selectedContainerID) {
+        Table(filteredContainers, selection: $selectedContainerID) {
             TableColumn("Status") { container in
                 HStack(spacing: 6) {
                     Circle()
@@ -111,23 +122,23 @@ struct DockerView: View {
         }
         .contextMenu(forSelectionType: String.self) { ids in
             if let id = ids.first, let container = containers.first(where: { $0.id == id }) {
-                Button("Start") {
+                Button("Start", systemImage: "play.fill") {
                     performAction { docker in try await docker.startContainer(container.id) }
                 }
                 .disabled(container.state.isRunning)
 
-                Button("Stop") {
+                Button("Stop", systemImage: "stop.fill") {
                     performAction { docker in try await docker.stopContainer(container.id) }
                 }
                 .disabled(!container.state.isRunning)
 
-                Button("Restart") {
+                Button("Restart", systemImage: "arrow.clockwise") {
                     performAction { docker in try await docker.restartContainer(container.id) }
                 }
 
                 Divider()
 
-                Button("View Logs") {
+                Button("View Logs", systemImage: "doc.text") {
                     selectedContainerID = id
                     showInspector = true
                 }

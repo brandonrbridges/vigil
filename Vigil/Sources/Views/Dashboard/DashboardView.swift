@@ -43,6 +43,7 @@ struct DashboardView: View {
             servicesSection
         }
         .formStyle(.grouped)
+        .animation(.smooth, value: metrics.timestamp)
     }
 
     // MARK: - System
@@ -154,8 +155,9 @@ struct DashboardView: View {
     private var diskSection: some View {
         Section("Disk") {
             if metrics.disk.isEmpty {
-                Text("No data")
+                Text("No disk data available")
                     .foregroundStyle(.secondary)
+                    .font(.callout)
             } else {
                 ForEach(metrics.disk) { disk in
                     VStack(alignment: .leading, spacing: 6) {

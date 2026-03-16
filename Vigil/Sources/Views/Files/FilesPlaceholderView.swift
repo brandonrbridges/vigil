@@ -13,6 +13,7 @@ struct FilesPlaceholderView: View {
     @State private var showNewFolderAlert = false
     @State private var newFolderName = ""
     @State private var showDeleteConfirm = false
+    @State private var searchText = ""
 
     private var selectedFile: RemoteFile? {
         guard let id = selectedFileID else { return nil }
@@ -26,6 +27,13 @@ struct FilesPlaceholderView: View {
         }
     }
 
+    private var filteredFiles: [RemoteFile] {
+        if searchText.isEmpty { return sortedFiles }
+        return sortedFiles.filter {
+            $0.name.localizedCaseInsensitiveContains(searchText)
+        }
+    }
+
     var body: some View {
         Group {
             if isLoading {
@@ -34,6 +42,7 @@ struct FilesPlaceholderView: View {
                 fileTable
             }
         }
+        .searchable(text: $searchText, prompt: "Filter files")
         .navigationTitle(currentPath)
         .toolbar {
             ToolbarItemGroup(placement: .automatic) {
@@ -42,6 +51,7 @@ struct FilesPlaceholderView: View {
                 } label: {
                     Label("Back", systemImage: "chevron.left")
                 }
+                .keyboardShortcut("[", modifiers: .command)
                 .disabled(pathHistory.isEmpty)
 
                 Button {
@@ -49,6 +59,7 @@ struct FilesPlaceholderView: View {
                 } label: {
                     Label("Enclosing Folder", systemImage: "arrow.up")
                 }
+                .keyboardShortcut(.upArrow, modifiers: .command)
                 .disabled(currentPath == "/")
 
                 Button {
@@ -56,6 +67,7 @@ struct FilesPlaceholderView: View {
                 } label: {
                     Label("Refresh", systemImage: "arrow.clockwise")
                 }
+                .keyboardShortcut("r", modifiers: .command)
 
                 Button {
                     newFolderName = ""
@@ -63,6 +75,7 @@ struct FilesPlaceholderView: View {
                 } label: {
                     Label("New Folder", systemImage: "folder.badge.plus")
                 }
+                .keyboardShortcut("n", modifiers: [.command, .shift])
 
                 Button {
                     showInspector.toggle()
@@ -97,7 +110,7 @@ struct FilesPlaceholderView: View {
     }
 
     private var fileTable: some View {
-        Table(sortedFiles, selection: $selectedFileID) {
+        Table(filteredFiles, selection: $selectedFileID) {
             TableColumn("Name") { file in
                 HStack(spacing: 6) {
                     Image(systemName: file.icon)
@@ -134,18 +147,18 @@ struct FilesPlaceholderView: View {
         .contextMenu(forSelectionType: String.self) { ids in
             if let id = ids.first, let file = files.first(where: { $0.id == id }) {
                 if file.isDirectory {
-                    Button("Open") {
+                    Button("Open", systemImage: "folder") {
                         navigateTo(file.path)
                     }
                 } else {
-                    Button("Preview") {
+                    Button("Preview", systemImage: "eye") {
                         previewFile(file)
                     }
                 }
 
                 Divider()
 
-                Button("Delete", role: .destructive) {
+                Button("Delete", systemImage: "trash", role: .destructive) {
                     selectedFileID = id
                     showDeleteConfirm = true
                 }

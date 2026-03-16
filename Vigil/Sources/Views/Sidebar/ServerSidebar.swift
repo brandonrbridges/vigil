@@ -38,11 +38,11 @@ struct ServerSidebar: View {
                     )
                     .tag(server.id)
                     .contextMenu {
-                        Button("Edit Server...") {
+                        Button("Edit Server...", systemImage: "pencil") {
                             activeSheet = .edit(server)
                         }
 
-                        Button("Reconnect") {
+                        Button("Reconnect", systemImage: "arrow.clockwise") {
                             Task {
                                 await connectionManager.disconnect(from: server)
                                 await connectionManager.connect(to: server)
@@ -51,7 +51,7 @@ struct ServerSidebar: View {
 
                         Divider()
 
-                        Button("Remove", role: .destructive) {
+                        Button("Remove", systemImage: "trash", role: .destructive) {
                             serverToDelete = server
                         }
                     }
@@ -108,6 +108,7 @@ struct ServerSidebar: View {
                 } label: {
                     Image(systemName: "plus")
                 }
+                .keyboardShortcut("n", modifiers: .command)
             }
         }
         .sheet(item: $activeSheet) { sheet in

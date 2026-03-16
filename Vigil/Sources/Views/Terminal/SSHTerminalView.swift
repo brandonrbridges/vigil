@@ -4,6 +4,7 @@ import AppKit
 /// A native SSH terminal that spawns an ssh process connected to a pseudo-terminal.
 struct SSHTerminalView: NSViewRepresentable {
     let server: Server
+    @Binding var masterFileDescriptor: Int32
 
     func makeNSView(context: Context) -> NSScrollView {
         let scrollView = NSScrollView()
@@ -19,9 +20,9 @@ struct SSHTerminalView: NSViewRepresentable {
         textView.isAutomaticSpellingCorrectionEnabled = false
         textView.isContinuousSpellCheckingEnabled = false
         textView.font = NSFont.monospacedSystemFont(ofSize: 13, weight: .regular)
-        textView.textColor = .white
-        textView.backgroundColor = .black.withAlphaComponent(0.85)
-        textView.insertionPointColor = .white
+        textView.textColor = .labelColor
+        textView.backgroundColor = .clear
+        textView.insertionPointColor = .labelColor
         textView.textContainerInset = NSSize(width: 8, height: 8)
         textView.autoresizingMask = [.width]
         textView.isVerticallyResizable = true
@@ -34,6 +35,7 @@ struct SSHTerminalView: NSViewRepresentable {
         scrollView.drawsBackground = false
 
         context.coordinator.textView = textView
+        context.coordinator.masterFDBinding = $masterFileDescriptor
         context.coordinator.startSSH(server: server)
 
         return scrollView
@@ -51,6 +53,7 @@ struct SSHTerminalView: NSViewRepresentable {
 
     class Coordinator: @unchecked Sendable {
         var textView: TerminalTextView?
+        var masterFDBinding: Binding<Int32>?
         private var process: Process?
         private var masterFD: Int32 = -1
         private var readSource: DispatchSourceRead?
@@ -121,9 +124,10 @@ struct SSHTerminalView: NSViewRepresentable {
             source.resume()
             self.readSource = source
 
-            // Set up the text view to write to master
+            // Set up the text view to write to master and expose FD to SwiftUI
             DispatchQueue.main.async { [weak self] in
                 self?.textView?.masterFD = fd
+                self?.masterFDBinding?.wrappedValue = fd
             }
 
             do {
@@ -149,7 +153,7 @@ struct SSHTerminalView: NSViewRepresentable {
                     string: cleaned,
                     attributes: [
                         .font: NSFont.monospacedSystemFont(ofSize: 13, weight: .regular),
-                        .foregroundColor: NSColor.white
+                        .foregroundColor: NSColor.labelColor
                     ]
                 )
 
@@ -166,6 +170,9 @@ struct SSHTerminalView: NSViewRepresentable {
             if masterFD >= 0 {
                 close(masterFD)
                 masterFD = -1
+            }
+            DispatchQueue.main.async { [weak self] in
+                self?.masterFDBinding?.wrappedValue = -1
             }
         }
     }

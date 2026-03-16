@@ -31,7 +31,7 @@ actor SSHConnection {
         var args: [String] = []
         args.append("-o"); args.append("StrictHostKeyChecking=accept-new")
         args.append("-o"); args.append("ControlMaster=auto")
-        args.append("-o"); args.append("ControlPath=/tmp/ssm-%r@%h:%p")
+        args.append("-o"); args.append("ControlPath=/tmp/vigil-%r@%h:%p")
         args.append("-o"); args.append("ControlPersist=60")
         args.append("-o"); args.append("ConnectTimeout=10")
         args.append("-o"); args.append("BatchMode=yes")

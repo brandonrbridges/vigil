@@ -151,22 +151,46 @@ struct MetricParser {
         let os = kernelParts.count > 0 ? String(kernelParts[0]) : ""
         let kernel = kernelParts.count > 2 ? String(kernelParts[2]) : ""
 
-        // Parse uptime from "uptime -p" or fallback
-        var uptime = uptimeOutput
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .replacingOccurrences(of: "up ", with: "")
-
-        // If uptime -p failed, extract from regular uptime
-        if uptime.contains("load average") {
-            if let upRange = uptime.range(of: "up ") {
-                let afterUp = String(uptime[upRange.upperBound...])
-                if let commaRange = afterUp.range(of: ",") {
-                    uptime = String(afterUp[..<commaRange.lowerBound])
-                        .trimmingCharacters(in: .whitespaces)
-                }
-            }
-        }
+        let uptime = parseUptime(uptimeOutput)
 
         return SystemInfo(hostname: hostname, os: os, kernel: kernel, uptime: uptime)
+    }
+
+    /// Parse uptime from either `uptime -p` ("up 3 days, 5 hours") or regular `uptime` output
+    private static func parseUptime(_ raw: String) -> String {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // `uptime -p` format: "up 3 days, 5 hours, 12 minutes"
+        if trimmed.hasPrefix("up ") && !trimmed.contains("load average") {
+            return String(trimmed.dropFirst(3))
+        }
+
+        // Regular `uptime` format: " 21:58:24 up 97 days, 9:23, 6 users, load average: ..."
+        // Extract between "up " and the user count
+        guard let upRange = trimmed.range(of: "up ") else { return trimmed }
+        let afterUp = String(trimmed[upRange.upperBound...])
+
+        // Find the "N user" marker and take everything before it
+        if let userRange = afterUp.range(of: #"\d+\s+user"#, options: .regularExpression) {
+            var uptimeStr = String(afterUp[..<userRange.lowerBound])
+            // Remove trailing comma and whitespace
+            uptimeStr = uptimeStr.trimmingCharacters(in: .whitespaces)
+            if uptimeStr.hasSuffix(",") {
+                uptimeStr = String(uptimeStr.dropLast())
+            }
+            return uptimeStr.trimmingCharacters(in: .whitespaces)
+        }
+
+        // Fallback: take up to first "load average"
+        if let loadRange = afterUp.range(of: "load average") {
+            var uptimeStr = String(afterUp[..<loadRange.lowerBound])
+            uptimeStr = uptimeStr.trimmingCharacters(in: .whitespacesAndNewlines)
+            if uptimeStr.hasSuffix(",") {
+                uptimeStr = String(uptimeStr.dropLast())
+            }
+            return uptimeStr.trimmingCharacters(in: .whitespaces)
+        }
+
+        return afterUp.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }

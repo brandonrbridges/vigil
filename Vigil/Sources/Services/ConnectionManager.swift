@@ -8,6 +8,7 @@ final class ConnectionManager {
     private var dockerServices: [UUID: DockerService] = [:]
     private var sftpServices: [UUID: SFTPService] = [:]
     private var prefetchTasks: [UUID: Task<Void, Never>] = [:]
+    private var connectedServers: [UUID: Server] = [:]
     var metrics: [UUID: ServerMetrics] = [:]
     var cpuHistory: [UUID: [CPUDataPoint]] = [:]
     var dockerContainers: [UUID: [DockerContainer]] = [:]
@@ -31,6 +32,7 @@ final class ConnectionManager {
     /// Connect and start monitoring a server
     func connect(to server: Server) async {
         connectionStates[server.id] = .connecting
+        connectedServers[server.id] = server
         let connection = SSHConnection(server: server)
 
         do {
@@ -45,7 +47,6 @@ final class ConnectionManager {
             await monitor.startPolling { [weak self] newMetrics in
                 Task { @MainActor in
                     self?.metrics[serverID] = newMetrics
-                    // Track CPU history
                     let point = CPUDataPoint(timestamp: newMetrics.timestamp, usage: newMetrics.cpu.usagePercent)
                     var history = self?.cpuHistory[serverID] ?? []
                     history.append(point)
@@ -55,6 +56,7 @@ final class ConnectionManager {
                     self?.cpuHistory[serverID] = history
                 }
             }
+
             // Pre-fetch Docker containers
             let docker = DockerService(connection: connection)
             let serverIDForDocker = server.id
@@ -70,7 +72,7 @@ final class ConnectionManager {
         }
     }
 
-    /// Disconnect a server
+    /// Disconnect a server and clean up its SSH multiplexing socket
     func disconnect(from server: Server) async {
         if let monitor = monitors[server.id] {
             await monitor.stopPolling()
@@ -82,7 +84,24 @@ final class ConnectionManager {
         dockerServices.removeValue(forKey: server.id)
         sftpServices.removeValue(forKey: server.id)
         metrics.removeValue(forKey: server.id)
+        connectedServers.removeValue(forKey: server.id)
         connectionStates[server.id] = .disconnected
+
+        // Clean up SSH ControlMaster socket
+        cleanupSSHSocket(for: server)
+    }
+
+    /// Disconnect all servers and clean up all sockets — call on app termination
+    func disconnectAll() async {
+        for (_, server) in connectedServers {
+            await disconnect(from: server)
+        }
+    }
+
+    /// Attempt to reconnect a server that has failed
+    func reconnect(server: Server) async {
+        await disconnect(from: server)
+        await connect(to: server)
     }
 
     func connection(for serverID: UUID) -> SSHConnection? {
@@ -103,5 +122,25 @@ final class ConnectionManager {
         let service = SFTPService(connection: connection)
         sftpServices[serverID] = service
         return service
+    }
+
+    // MARK: - SSH Socket Cleanup
+
+    private nonisolated func cleanupSSHSocket(for server: Server) {
+        let host = server.host.trimmingCharacters(in: .whitespacesAndNewlines)
+        let username = server.username.trimmingCharacters(in: .whitespacesAndNewlines)
+        let socketPath = "/tmp/vigil-\(username)@\(host):\(server.port)"
+
+        // Ask ControlMaster to exit gracefully
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/ssh")
+        process.arguments = [
+            "-o", "ControlPath=\(socketPath)",
+            "-O", "exit",
+            "\(username)@\(host)"
+        ]
+        process.standardOutput = FileHandle.nullDevice
+        process.standardError = FileHandle.nullDevice
+        try? process.run()
     }
 }

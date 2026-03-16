@@ -5,6 +5,20 @@ actor ServerMonitor {
     private var pollTask: Task<Void, Never>?
     private var metricsHandler: ((ServerMetrics) -> Void)?
 
+    /// Single combined command that collects all metrics in one SSH call.
+    /// Each section is delimited by a marker line for reliable parsing.
+    private static let metricsCommand = """
+    echo '---TOP---' && top -bn1 | head -5 && \
+    echo '---FREE---' && free -m && \
+    echo '---DF---' && df -m && \
+    echo '---IP---' && ip -s link && \
+    echo '---SS---' && ss -tun | wc -l && \
+    echo '---SERVICES---' && systemctl list-units --type=service --state=running --no-pager --no-legend && \
+    echo '---HOSTNAME---' && hostname && \
+    echo '---UNAME---' && uname -srm && \
+    echo '---UPTIME---' && uptime -p 2>/dev/null || uptime
+    """
+
     init(connection: SSHConnection) {
         self.connection = connection
     }
@@ -27,38 +41,61 @@ actor ServerMonitor {
     }
 
     private func fetchMetrics() async -> ServerMetrics {
-        // Run all metric commands in parallel
-        async let topResult = safeExecute("top -bn1 | head -5")
-        async let freeResult = safeExecute("free -m")
-        async let dfResult = safeExecute("df -m")
-        async let ipResult = safeExecute("ip -s link")
-        async let ssResult = safeExecute("ss -tun | wc -l")
-        async let servicesResult = safeExecute("systemctl list-units --type=service --state=running --no-pager --no-legend")
-        async let hostnameResult = safeExecute("hostname")
-        async let unameResult = safeExecute("uname -srm")
-        async let uptimeResult = safeExecute("uptime")
+        // Single SSH call for all metrics
+        let output: String
+        do {
+            output = try await connection.execute(Self.metricsCommand)
+        } catch {
+            return .empty
+        }
 
-        let (top, free, df, ip, ss, services, hostname, uname, uptime) = await (
-            topResult, freeResult, dfResult, ipResult, ssResult,
-            servicesResult, hostnameResult, unameResult, uptimeResult
-        )
+        let sections = parseSections(output)
 
         return ServerMetrics(
-            cpu: MetricParser.parseCPU(from: top, uptimeOutput: uptime),
-            memory: MetricParser.parseMemory(from: free),
-            disk: MetricParser.parseDisk(from: df),
-            network: MetricParser.parseNetwork(from: ip, ssOutput: ss),
-            services: MetricParser.parseServices(from: services),
-            systemInfo: MetricParser.parseSystemInfo(from: hostname, unameOutput: uname, uptimeOutput: uptime),
+            cpu: MetricParser.parseCPU(
+                from: sections["TOP"] ?? "",
+                uptimeOutput: sections["UPTIME"] ?? ""
+            ),
+            memory: MetricParser.parseMemory(from: sections["FREE"] ?? ""),
+            disk: MetricParser.parseDisk(from: sections["DF"] ?? ""),
+            network: MetricParser.parseNetwork(
+                from: sections["IP"] ?? "",
+                ssOutput: sections["SS"] ?? ""
+            ),
+            services: MetricParser.parseServices(from: sections["SERVICES"] ?? ""),
+            systemInfo: MetricParser.parseSystemInfo(
+                from: sections["HOSTNAME"] ?? "",
+                unameOutput: sections["UNAME"] ?? "",
+                uptimeOutput: sections["UPTIME"] ?? ""
+            ),
             timestamp: .now
         )
     }
 
-    private func safeExecute(_ command: String) async -> String {
-        do {
-            return try await connection.execute(command)
-        } catch {
-            return ""
+    /// Parse the combined output into named sections using ---MARKER--- delimiters.
+    private func parseSections(_ output: String) -> [String: String] {
+        var sections: [String: String] = [:]
+        var currentKey: String?
+        var currentLines: [String] = []
+
+        for line in output.components(separatedBy: "\n") {
+            if line.hasPrefix("---") && line.hasSuffix("---") {
+                // Save previous section
+                if let key = currentKey {
+                    sections[key] = currentLines.joined(separator: "\n")
+                }
+                // Start new section
+                currentKey = String(line.dropFirst(3).dropLast(3))
+                currentLines = []
+            } else {
+                currentLines.append(line)
+            }
         }
+        // Save last section
+        if let key = currentKey {
+            sections[key] = currentLines.joined(separator: "\n")
+        }
+
+        return sections
     }
 }

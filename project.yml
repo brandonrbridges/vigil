@@ -1,0 +1,35 @@
+name: Vigil
+options:
+  bundleIdPrefix: com.vigil
+  deploymentTarget:
+    macOS: "26.0"
+  xcodeVersion: "26.0"
+  createIntermediateGroups: true
+  defaultConfig: Debug
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "26.0"
+targets:
+  Vigil:
+    type: application
+    platform: macOS
+    sources:
+      - Vigil/Sources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.vigil.server-monitor
+        PRODUCT_NAME: Vigil
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
+        INFOPLIST_KEY_CFBundleDisplayName: "Vigil"
+        GENERATE_INFOPLIST_FILE: YES
+        CODE_SIGN_ENTITLEMENTS: Vigil/Vigil.entitlements
+        ENABLE_HARDENED_RUNTIME: YES
+        SWIFT_STRICT_CONCURRENCY: complete
+    dependencies: []
+    entitlements:
+      path: Vigil/Vigil.entitlements
+      properties:
+        com.apple.security.app-sandbox: false
+        com.apple.security.network.client: true

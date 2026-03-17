@@ -15,6 +15,7 @@ struct ServerSidebar: View {
 
     @Environment(ServerManager.self) private var serverManager
     @Environment(ConnectionManager.self) private var connectionManager
+    @Environment(\.openWindow) private var openWindow
     @State private var activeSheet: SheetType?
     @State private var verifiedHosts: [VerifiedHost] = []
     @State private var isProbing = false
@@ -40,6 +41,10 @@ struct ServerSidebar: View {
                     .contextMenu {
                         Button("Edit Server...", systemImage: "pencil") {
                             activeSheet = .edit(server)
+                        }
+
+                        Button("Open in New Window", systemImage: "macwindow.badge.plus") {
+                            openWindow(value: server.id)
                         }
 
                         Button("Reconnect", systemImage: "arrow.clockwise") {
@@ -156,6 +161,11 @@ struct ServerSidebar: View {
                 }
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .openServerInNewWindow)) { _ in
+            if let id = serverManager.selectedServerID {
+                openWindow(value: id)
+            }
+        }
         .onReceive(NotificationCenter.default.publisher(for: .disconnectServer)) { _ in
             if let id = serverManager.selectedServerID,
                let server = serverManager.servers.first(where: { $0.id == id }) {
@@ -207,6 +217,7 @@ struct ServerRow: View {
             Circle()
                 .fill(statusColor)
                 .frame(width: 8, height: 8)
+                .accessibilityLabel("Connection status: \(state == .connected ? "connected" : state == .connecting ? "connecting" : state == .disconnected ? "disconnected" : "failed")")
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(server.displayName)

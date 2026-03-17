@@ -2,8 +2,8 @@ import SwiftUI
 
 @main
 struct VigilApp: App {
-    @State private var serverManager = ServerManager()
-    @State private var connectionManager = ConnectionManager()
+    @State private var serverManager = ServerManager.shared
+    @State private var connectionManager = ConnectionManager.shared
     @State private var commandHistory = CommandHistoryManager()
     @State private var appSettings = AppSettings()
     @State private var statusBar: StatusBarManager?
@@ -31,6 +31,16 @@ struct VigilApp: App {
         }
         .windowStyle(.automatic)
         .defaultSize(width: 1200, height: 800)
+
+        WindowGroup("Server", for: UUID.self) { $serverID in
+            if let serverID, let server = serverManager.servers.first(where: { $0.id == serverID }) {
+                ServerDetailView(server: server)
+                    .environment(connectionManager)
+                    .environment(commandHistory)
+                    .environment(appSettings)
+            }
+        }
+        .defaultSize(width: 900, height: 700)
         .commands {
             CommandGroup(replacing: .newItem) {
                 Button("Add Server...") {
@@ -55,6 +65,11 @@ struct VigilApp: App {
                     NotificationCenter.default.post(name: .editServer, object: nil)
                 }
                 .keyboardShortcut("e", modifiers: .command)
+
+                Button("Open in New Window") {
+                    NotificationCenter.default.post(name: .openServerInNewWindow, object: nil)
+                }
+                .keyboardShortcut("o", modifiers: [.command, .shift])
             }
         }
 

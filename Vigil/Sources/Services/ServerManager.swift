@@ -4,6 +4,8 @@ import SwiftUI
 @MainActor
 @Observable
 final class ServerManager {
+    static let shared = ServerManager()
+
     var servers: [Server] = []
     var selectedServerID: UUID?
 

@@ -3,6 +3,8 @@ import SwiftUI
 
 @MainActor @Observable
 final class ConnectionManager {
+    static let shared = ConnectionManager()
+
     private var connections: [UUID: SSHConnection] = [:]
     private var monitors: [UUID: ServerMonitor] = [:]
     private var dockerServices: [UUID: DockerService] = [:]

@@ -44,6 +44,30 @@ actor SFTPService {
         return result.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    /// Download a file to a local path using base64 encoding
+    func downloadFile(remotePath: String, localURL: URL) async -> Bool {
+        guard let output = try? await connection.execute("base64 \(shellEscape(remotePath))") else {
+            return false
+        }
+        guard let data = Data(base64Encoded: output.trimmingCharacters(in: .whitespacesAndNewlines), options: .ignoreUnknownCharacters) else {
+            return false
+        }
+        do {
+            try data.write(to: localURL)
+            return true
+        } catch {
+            return false
+        }
+    }
+
+    /// Upload a local file to the server using base64 encoding
+    func uploadFile(localURL: URL, remotePath: String) async -> Bool {
+        guard let data = try? Data(contentsOf: localURL) else { return false }
+        let base64 = data.base64EncodedString()
+        let command = "echo '\(base64)' | base64 -d > \(shellEscape(remotePath))"
+        return (try? await connection.execute(command)) != nil
+    }
+
     // MARK: - Parsing
 
     private func parseLsLine(_ line: String, parentPath: String) -> RemoteFile? {

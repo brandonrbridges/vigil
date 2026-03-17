@@ -28,6 +28,7 @@ struct TerminalPlaceholderView: View {
                     .buttonStyle(.bordered)
                     .controlSize(.small)
                     .padding(8)
+                    .accessibilityLabel("Disconnect terminal session")
                 }
                 .toolbar {
                     ToolbarItem(placement: .primaryAction) {
@@ -87,6 +88,7 @@ struct TerminalPlaceholderView: View {
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
                 .disabled(!isServerConnected)
+                .accessibilityLabel("Connect to SSH terminal on \(server.host)")
 
                 if !isServerConnected {
                     Text("Waiting for server connection...")

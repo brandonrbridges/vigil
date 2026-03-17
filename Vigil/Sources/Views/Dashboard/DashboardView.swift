@@ -75,6 +75,8 @@ struct DashboardView: View {
                 }
 
                 cpuChart
+                .accessibilityLabel("CPU usage")
+                .accessibilityValue("\(metrics.cpu.usagePercent, specifier: "%.1f") percent")
                 .chartYScale(domain: 0...100)
                 .chartXAxis(.hidden)
                 .chartYAxis {
@@ -109,6 +111,8 @@ struct DashboardView: View {
                     .font(.callout)
                 }
                 .tint(memoryTint)
+                .accessibilityLabel("Memory usage")
+                .accessibilityValue("\(metrics.memory.usagePercent, specifier: "%.1f") percent")
             }
 
             LabeledContent("Used", value: formatMB(metrics.memory.usedMB))
@@ -172,6 +176,8 @@ struct DashboardView: View {
                             }
                         }
                         .tint(disk.usagePercent > 90 ? .red : disk.usagePercent > 75 ? .orange : .blue)
+                        .accessibilityLabel("Disk usage for \(disk.mountPoint)")
+                        .accessibilityValue("\(disk.usagePercent, specifier: "%.1f") percent")
                     }
                 }
             }
@@ -206,6 +212,7 @@ struct DashboardView: View {
                     .foregroundStyle(.orange)
             }
         }
+        .accessibilityElement(children: .combine)
     }
 
     // MARK: - Services

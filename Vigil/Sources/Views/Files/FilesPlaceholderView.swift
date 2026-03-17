@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct FilesPlaceholderView: View {
     let server: Server
@@ -120,6 +121,30 @@ struct FilesPlaceholderView: View {
                         .font(.callout)
                         .lineLimit(1)
                 }
+                .onDrag {
+                    let provider = NSItemProvider()
+                    guard !file.isDirectory else { return provider }
+                    let typeID = UTType.fileURL.identifier
+                    provider.registerFileRepresentation(forTypeIdentifier: typeID, visibility: .all) { completion in
+                        Task {
+                            guard let sftp = await connectionManager.sftpService(for: server.id) else {
+                                completion(nil, false, nil)
+                                return
+                            }
+                            let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent("Vigil")
+                            try? FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+                            let localURL = tempDir.appendingPathComponent(file.name)
+                            let success = await sftp.downloadFile(remotePath: file.path, localURL: localURL)
+                            if success {
+                                completion(localURL, false, nil)
+                            } else {
+                                completion(nil, false, nil)
+                            }
+                        }
+                        return Progress()
+                    }
+                    return provider
+                }
             }
             .width(min: 200, ideal: 350)
 
@@ -179,6 +204,17 @@ struct FilesPlaceholderView: View {
                 ContentUnavailableView("No File Selected", systemImage: "doc", description: Text("Select a file to view its details."))
                     .inspectorColumnWidth(min: 280, ideal: 320, max: 400)
             }
+        }
+        .dropDestination(for: URL.self) { urls, _ in
+            for url in urls {
+                Task {
+                    guard let sftp = connectionManager.sftpService(for: server.id) else { return }
+                    let remotePath = currentPath.hasSuffix("/") ? "\(currentPath)\(url.lastPathComponent)" : "\(currentPath)/\(url.lastPathComponent)"
+                    _ = await sftp.uploadFile(localURL: url, remotePath: remotePath)
+                    await loadDirectory(currentPath)
+                }
+            }
+            return true
         }
     }
 

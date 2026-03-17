@@ -36,6 +36,7 @@
 		A0C2D8CEEA76708FC979C148 /* ServerDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB19C0229BDBC27AC4EDAA8E /* ServerDetailView.swift */; };
 		A2A086A11D047A04474B2D7B /* SSHTerminalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F28C7A77761F66DE434A0D7 /* SSHTerminalView.swift */; };
 		A6F2BAD4FB4D8681EF55DBCF /* SSHKeyDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 137DB2A5F411024088A60D0E /* SSHKeyDetector.swift */; };
+		B72B7FF84AFE5039CA649CE4 /* ServerStatusIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4760EFA1EDDCA82C2C7E1DEA /* ServerStatusIntent.swift */; };
 		C23B3870015E5F1BF06D44F4 /* AppNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6DCF9E09236E38DAB901D27 /* AppNotifications.swift */; };
 		D723AE3FE08CBBC4D6E6A455 /* ServerMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1371B72443586032AABF7250 /* ServerMetrics.swift */; };
 		E7F59B1193F28F221339227D /* SSHProber.swift in Sources */ = {isa = PBXBuildFile; fileRef = 930494C069664AAC2F141221 /* SSHProber.swift */; };
@@ -65,6 +66,7 @@
 		2EE596148249184F5AEDA5EC /* AddServerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddServerSheet.swift; sourceTree = "<group>"; };
 		3166BC14ACA57EA1A9ABDE36 /* MetricParserPerformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricParserPerformanceTests.swift; sourceTree = "<group>"; };
 		405403E11C486D37D312C798 /* DockerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockerView.swift; sourceTree = "<group>"; };
+		4760EFA1EDDCA82C2C7E1DEA /* ServerStatusIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerStatusIntent.swift; sourceTree = "<group>"; };
 		47DB1A04CBD60087E76E1844 /* TerminalPlaceholderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalPlaceholderView.swift; sourceTree = "<group>"; };
 		4ADC13BA03FA89874350F035 /* SSHConfigParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHConfigParser.swift; sourceTree = "<group>"; };
 		4CF35EC80B36AE7A5BBB88D2 /* RemoteFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteFile.swift; sourceTree = "<group>"; };
@@ -167,6 +169,14 @@
 			path = Welcome;
 			sourceTree = "<group>";
 		};
+		5D1905B677EA90C2C68CF575 /* Intents */ = {
+			isa = PBXGroup;
+			children = (
+				4760EFA1EDDCA82C2C7E1DEA /* ServerStatusIntent.swift */,
+			);
+			path = Intents;
+			sourceTree = "<group>";
+		};
 		603D98CFE231954DCD6FAF8D /* Terminal */ = {
 			isa = PBXGroup;
 			children = (
@@ -188,6 +198,7 @@
 			isa = PBXGroup;
 			children = (
 				A387C17EFDB1573F67A1ECE0 /* App */,
+				5D1905B677EA90C2C68CF575 /* Intents */,
 				2D7AA3799F3E392B555A0598 /* Models */,
 				1376A4920C4E55A49A5279DB /* Services */,
 				90A6491E722E62994F17AFA2 /* Views */,
@@ -402,6 +413,7 @@
 				D723AE3FE08CBBC4D6E6A455 /* ServerMetrics.swift in Sources */,
 				EE8CFBC09A73A24D38E8C110 /* ServerMonitor.swift in Sources */,
 				7AC5CD536E5FC9BA8489DF05 /* ServerSidebar.swift in Sources */,
+				B72B7FF84AFE5039CA649CE4 /* ServerStatusIntent.swift in Sources */,
 				82DE521120F2B5BEC1E70573 /* SettingsView.swift in Sources */,
 				4C3D5BC747D5BEFF4A77D66E /* StatusBarManager.swift in Sources */,
 				7023BF26BB009DDF0C5B16D0 /* TerminalPlaceholderView.swift in Sources */,

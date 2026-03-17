@@ -80,6 +80,7 @@ struct DockerView: View {
                     Circle()
                         .fill(container.state.isRunning ? Color.green : Color.gray)
                         .frame(width: 8, height: 8)
+                        .accessibilityLabel("Status: \(container.state.rawValue)")
                     Text(container.state.rawValue)
                         .font(.callout)
                 }
@@ -126,15 +127,18 @@ struct DockerView: View {
                     performAction { docker in try await docker.startContainer(container.id) }
                 }
                 .disabled(container.state.isRunning)
+                .accessibilityLabel("Start container")
 
                 Button("Stop", systemImage: "stop.fill") {
                     performAction { docker in try await docker.stopContainer(container.id) }
                 }
                 .disabled(!container.state.isRunning)
+                .accessibilityLabel("Stop container")
 
                 Button("Restart", systemImage: "arrow.clockwise") {
                     performAction { docker in try await docker.restartContainer(container.id) }
                 }
+                .accessibilityLabel("Restart container")
 
                 Divider()
 
@@ -234,16 +238,19 @@ struct ContainerInspector: View {
                         performAction { docker in try await docker.startContainer(container.id) }
                     }
                     .disabled(container.state.isRunning || isPerformingAction)
+                    .accessibilityLabel("Start container")
 
                     Button("Stop", systemImage: "stop.fill") {
                         performAction { docker in try await docker.stopContainer(container.id) }
                     }
                     .disabled(!container.state.isRunning || isPerformingAction)
+                    .accessibilityLabel("Stop container")
 
                     Button("Restart", systemImage: "arrow.clockwise") {
                         performAction { docker in try await docker.restartContainer(container.id) }
                     }
                     .disabled(isPerformingAction)
+                    .accessibilityLabel("Restart container")
                 }
             }
 

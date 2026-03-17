@@ -2,8 +2,8 @@ import SwiftUI
 
 @main
 struct VigilApp: App {
-    @State private var serverManager = ServerManager.shared
-    @State private var connectionManager = ConnectionManager.shared
+    private let serverManager = ServerManager.shared
+    private let connectionManager = ConnectionManager.shared
     @State private var commandHistory = CommandHistoryManager()
     @State private var appSettings = AppSettings()
     @State private var statusBar: StatusBarManager?

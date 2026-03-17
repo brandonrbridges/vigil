@@ -44,7 +44,7 @@ final class StatusBarManager: NSObject {
                     }
                 }
                 // Yield to avoid a tight loop; onChange fires on next run-loop turn.
-                try? await Task.sleep(for: .milliseconds(500))
+                try? await Task.sleep(for: .seconds(3))
             }
         }
     }

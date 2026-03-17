@@ -42,7 +42,7 @@ struct ServerStatusIntent: AppIntent {
             }
         case .connecting: status += "Connecting..."
         case .failed(let msg): status += "Failed: \(msg)"
-        case .disconnected, .none: status += "Disconnected"
+        case .disconnected, .none: status += "Disconnected — open Vigil to connect and monitor this server"
         }
 
         return .result(value: status, dialog: IntentDialog(stringLiteral: status))

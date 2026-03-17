@@ -212,12 +212,21 @@ struct ServerRow: View {
         }
     }
 
+    private var statusDescription: String {
+        switch state {
+        case .connected: "Connected"
+        case .connecting: "Connecting"
+        case .failed: "Connection failed"
+        case .disconnected: "Disconnected"
+        }
+    }
+
     var body: some View {
         HStack(spacing: 10) {
             Circle()
                 .fill(statusColor)
                 .frame(width: 8, height: 8)
-                .accessibilityLabel("Connection status: \(state == .connected ? "connected" : state == .connecting ? "connecting" : state == .disconnected ? "disconnected" : "failed")")
+                .accessibilityLabel("Connection status: \(statusDescription)")
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(server.displayName)

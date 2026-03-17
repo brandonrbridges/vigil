@@ -15,6 +15,8 @@ struct FilesPlaceholderView: View {
     @State private var newFolderName = ""
     @State private var showDeleteConfirm = false
     @State private var searchText = ""
+    @State private var transferError: String?
+    @State private var isTransferring = false
 
     private var selectedFile: RemoteFile? {
         guard let id = selectedFileID else { return nil }
@@ -108,6 +110,14 @@ struct FilesPlaceholderView: View {
         } message: {
             Text("This action cannot be undone.")
         }
+        .alert("Transfer Error", isPresented: Binding(
+            get: { transferError != nil },
+            set: { if !$0 { transferError = nil } }
+        )) {
+            Button("OK") { transferError = nil }
+        } message: {
+            Text(transferError ?? "")
+        }
     }
 
     private var fileTable: some View {
@@ -134,10 +144,11 @@ struct FilesPlaceholderView: View {
                             let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent("Vigil")
                             try? FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
                             let localURL = tempDir.appendingPathComponent(file.name)
-                            let success = await sftp.downloadFile(remotePath: file.path, localURL: localURL)
-                            if success {
+                            do {
+                                try await sftp.downloadFile(remotePath: file.path, localURL: localURL)
                                 completion(localURL, false, nil)
-                            } else {
+                            } catch {
+                                await MainActor.run { transferError = error.localizedDescription }
                                 completion(nil, false, nil)
                             }
                         }
@@ -206,11 +217,23 @@ struct FilesPlaceholderView: View {
             }
         }
         .dropDestination(for: URL.self) { urls, _ in
+            let maxSize: Int64 = 50 * 1024 * 1024
+            for url in urls {
+                let attrs = try? FileManager.default.attributesOfItem(atPath: url.path)
+                if let fileSize = attrs?[.size] as? Int64, fileSize > maxSize {
+                    transferError = "File \"\(url.lastPathComponent)\" is too large (\(fileSize / (1024 * 1024)) MB). Maximum transfer size is 50 MB."
+                    return false
+                }
+            }
             for url in urls {
                 Task {
                     guard let sftp = connectionManager.sftpService(for: server.id) else { return }
                     let remotePath = currentPath.hasSuffix("/") ? "\(currentPath)\(url.lastPathComponent)" : "\(currentPath)/\(url.lastPathComponent)"
-                    _ = await sftp.uploadFile(localURL: url, remotePath: remotePath)
+                    do {
+                        try await sftp.uploadFile(localURL: url, remotePath: remotePath)
+                    } catch {
+                        await MainActor.run { transferError = error.localizedDescription }
+                    }
                     await loadDirectory(currentPath)
                 }
             }

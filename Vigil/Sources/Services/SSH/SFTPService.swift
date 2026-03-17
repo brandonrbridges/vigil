@@ -1,7 +1,23 @@
 import Foundation
 
+enum SFTPError: LocalizedError {
+    case fileTooLarge(Int64)
+    case transferFailed(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .fileTooLarge(let size):
+            let mb = size / (1024 * 1024)
+            return "File is too large (\(mb) MB). Maximum transfer size is 50 MB."
+        case .transferFailed(let reason):
+            return "Transfer failed: \(reason)"
+        }
+    }
+}
+
 actor SFTPService {
     let connection: SSHConnection
+    private let maxTransferSize: Int64 = 50 * 1024 * 1024
 
     init(connection: SSHConnection) {
         self.connection = connection
@@ -22,9 +38,17 @@ actor SFTPService {
         }
     }
 
-    /// Read a text file's contents
+    /// Read a text file's contents (limited to 32 KB for preview)
     func readFile(_ path: String) async -> String? {
-        try? await connection.execute("cat \(shellEscape(path)) 2>/dev/null")
+        try? await connection.execute("head -c 32768 \(shellEscape(path)) 2>/dev/null")
+    }
+
+    /// Get the size of a remote file in bytes
+    func fileSize(_ path: String) async -> Int64? {
+        guard let output = try? await connection.execute("stat -c %s \(shellEscape(path)) 2>/dev/null") else {
+            return nil
+        }
+        return Int64(output.trimmingCharacters(in: .whitespacesAndNewlines))
     }
 
     /// Delete a file or directory
@@ -45,27 +69,37 @@ actor SFTPService {
     }
 
     /// Download a file to a local path using base64 encoding
-    func downloadFile(remotePath: String, localURL: URL) async -> Bool {
+    func downloadFile(remotePath: String, localURL: URL) async throws {
+        if let size = await fileSize(remotePath), size > maxTransferSize {
+            throw SFTPError.fileTooLarge(size)
+        }
         guard let output = try? await connection.execute("base64 \(shellEscape(remotePath))") else {
-            return false
+            throw SFTPError.transferFailed("Failed to read remote file.")
         }
         guard let data = Data(base64Encoded: output.trimmingCharacters(in: .whitespacesAndNewlines), options: .ignoreUnknownCharacters) else {
-            return false
+            throw SFTPError.transferFailed("Failed to decode file data.")
         }
         do {
             try data.write(to: localURL)
-            return true
         } catch {
-            return false
+            throw SFTPError.transferFailed(error.localizedDescription)
         }
     }
 
     /// Upload a local file to the server using base64 encoding
-    func uploadFile(localURL: URL, remotePath: String) async -> Bool {
-        guard let data = try? Data(contentsOf: localURL) else { return false }
+    func uploadFile(localURL: URL, remotePath: String) async throws {
+        let attrs = try? FileManager.default.attributesOfItem(atPath: localURL.path)
+        if let fileSize = attrs?[.size] as? Int64, fileSize > maxTransferSize {
+            throw SFTPError.fileTooLarge(fileSize)
+        }
+        guard let data = try? Data(contentsOf: localURL) else {
+            throw SFTPError.transferFailed("Failed to read local file.")
+        }
         let base64 = data.base64EncodedString()
         let command = "echo '\(base64)' | base64 -d > \(shellEscape(remotePath))"
-        return (try? await connection.execute(command)) != nil
+        guard (try? await connection.execute(command)) != nil else {
+            throw SFTPError.transferFailed("Failed to write remote file.")
+        }
     }
 
     // MARK: - Parsing
@@ -97,6 +131,9 @@ actor SFTPService {
     }
 
     private func shellEscape(_ path: String) -> String {
-        "'" + path.replacingOccurrences(of: "'", with: "'\\''") + "'"
+        let sanitized = path.replacingOccurrences(of: "\0", with: "")
+            .replacingOccurrences(of: "\n", with: "")
+            .replacingOccurrences(of: "\r", with: "")
+        return "'" + sanitized.replacingOccurrences(of: "'", with: "'\\''") + "'"
     }
 }

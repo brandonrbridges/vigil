@@ -3,11 +3,14 @@ import SwiftUI
 struct DockerView: View {
     let server: Server
     @Environment(ConnectionManager.self) private var connectionManager
-    @State private var containers: [DockerContainer] = []
     @State private var selectedContainerID: String?
     @State private var showInspector = false
     @State private var isLoading = true
     @State private var searchText = ""
+
+    private var containers: [DockerContainer] {
+        connectionManager.dockerContainers[server.id] ?? []
+    }
 
     private var filteredContainers: [DockerContainer] {
         if searchText.isEmpty { return containers }
@@ -58,18 +61,10 @@ struct DockerView: View {
             }
         }
         .task(id: server.id) {
-            if let prefetched = connectionManager.dockerContainers[server.id], !prefetched.isEmpty {
-                containers = prefetched
-                isLoading = false
-            } else {
+            if containers.isEmpty {
                 await refreshContainers()
             }
-            // Structured polling loop - automatically cancelled when server.id changes or view disappears
-            while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(10))
-                guard !Task.isCancelled else { break }
-                await refreshContainers()
-            }
+            isLoading = false
         }
     }
 
@@ -182,7 +177,7 @@ struct DockerView: View {
             return
         }
         let result = await docker.listContainers()
-        containers = result
+        connectionManager.dockerContainers[server.id] = result
         isLoading = false
     }
 

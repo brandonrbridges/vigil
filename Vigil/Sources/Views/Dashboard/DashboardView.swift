@@ -43,7 +43,6 @@ struct DashboardView: View {
             servicesSection
         }
         .formStyle(.grouped)
-        .animation(.smooth, value: metrics.timestamp)
     }
 
     // MARK: - System

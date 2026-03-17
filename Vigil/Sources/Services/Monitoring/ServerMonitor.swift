@@ -21,12 +21,13 @@ actor ServerMonitor {
         self.connection = connection
     }
 
-    func startPolling(interval: TimeInterval = 5, handler: @escaping @Sendable (ServerMetrics) -> Void) {
+    func startPolling(settings: AppSettings?, handler: @escaping @Sendable (ServerMetrics) -> Void) {
         pollTask?.cancel()
         pollTask = Task {
             while !Task.isCancelled {
                 let metrics = await fetchMetrics()
                 handler(metrics)
+                let interval = await MainActor.run { settings?.pollingInterval ?? 5 }
                 try? await Task.sleep(for: .seconds(interval))
             }
         }

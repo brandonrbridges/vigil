@@ -10,6 +10,7 @@ final class ConnectionManager {
     private var dockerServices: [UUID: DockerService] = [:]
     private var sftpServices: [UUID: SFTPService] = [:]
     private var prefetchTasks: [UUID: Task<Void, Never>] = [:]
+    private var dockerPollTasks: [UUID: Task<Void, Never>] = [:]
     private(set) var connectedServers: [UUID: Server] = [:]
     var metrics: [UUID: ServerMetrics] = [:]
     var cpuHistory: [UUID: [CPUDataPoint]] = [:]
@@ -54,7 +55,7 @@ final class ConnectionManager {
             monitors[server.id] = monitor
 
             let serverID = server.id
-            await monitor.startPolling(interval: TimeInterval(appSettings?.pollingInterval ?? 5)) { [weak self] newMetrics in
+            await monitor.startPolling(settings: appSettings) { [weak self] newMetrics in
                 Task { @MainActor in
                     self?.metrics[serverID] = newMetrics
                     let point = CPUDataPoint(timestamp: newMetrics.timestamp, usage: newMetrics.cpu.usagePercent)
@@ -69,7 +70,12 @@ final class ConnectionManager {
                     if let self,
                        let state = self.connectionStates[serverID],
                        let server = self.connectedServers[serverID] {
-                        self.notificationService?.recordPollSuccess(serverID: serverID)
+                        // Detect failed polls: empty hostname indicates fetchMetrics() failure
+                        if newMetrics.systemInfo.hostname.isEmpty {
+                            self.notificationService?.recordPollFailure(serverID: serverID, serverName: server.displayName)
+                        } else {
+                            self.notificationService?.recordPollSuccess(serverID: serverID)
+                        }
                         self.notificationService?.checkAndNotify(
                             serverID: serverID,
                             serverName: server.displayName,
@@ -80,14 +86,16 @@ final class ConnectionManager {
                 }
             }
 
-            // Pre-fetch Docker containers
+            // Start Docker container polling
             let docker = DockerService(connection: connection)
+            dockerServices[server.id] = docker
             let serverIDForDocker = server.id
-            prefetchTasks[server.id] = Task {
-                let containers = await docker.listContainers()
-                await MainActor.run {
-                    self.dockerContainers[serverIDForDocker] = containers
-                    self.prefetchTasks.removeValue(forKey: serverIDForDocker)
+            dockerPollTasks[server.id] = Task { [weak self] in
+                while !Task.isCancelled {
+                    let containers = await docker.listContainers()
+                    guard !Task.isCancelled else { break }
+                    self?.dockerContainers[serverIDForDocker] = containers
+                    try? await Task.sleep(for: .seconds(10))
                 }
             }
         } catch {
@@ -102,6 +110,8 @@ final class ConnectionManager {
         }
         prefetchTasks[server.id]?.cancel()
         prefetchTasks.removeValue(forKey: server.id)
+        dockerPollTasks[server.id]?.cancel()
+        dockerPollTasks.removeValue(forKey: server.id)
         monitors.removeValue(forKey: server.id)
         connections.removeValue(forKey: server.id)
         dockerServices.removeValue(forKey: server.id)

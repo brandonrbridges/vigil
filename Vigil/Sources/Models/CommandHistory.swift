@@ -9,6 +9,7 @@ final class CommandHistoryManager {
     var hasAskedAboutQuickInsert: Bool = false
 
     private let storageURL: URL
+    private var saveTask: Task<Void, Never>?
 
     init() {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
@@ -22,7 +23,7 @@ final class CommandHistoryManager {
         // Don't record empty or duplicate consecutive commands
         let trimmed = command.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
-        if let last = history.last, last.command == trimmed { return }
+        if let last = history.last(where: { $0.serverID == serverID }), last.command == trimmed { return }
 
         let entry = CommandEntry(command: trimmed, serverID: serverID, timestamp: .now)
         history.append(entry)
@@ -31,7 +32,7 @@ final class CommandHistoryManager {
         if history.count > 500 {
             history.removeFirst(history.count - 500)
         }
-        save()
+        scheduleSave()
     }
 
     func toggleFavourite(_ entry: CommandEntry) {
@@ -40,7 +41,7 @@ final class CommandHistoryManager {
         } else {
             favourites.append(entry)
         }
-        save()
+        performSave()
     }
 
     func isFavourite(_ command: String) -> Bool {
@@ -49,7 +50,7 @@ final class CommandHistoryManager {
 
     func clearHistory() {
         history.removeAll()
-        save()
+        performSave()
     }
 
     private func load() {
@@ -61,7 +62,16 @@ final class CommandHistoryManager {
         hasAskedAboutQuickInsert = stored.hasAskedAboutQuickInsert
     }
 
-    private func save() {
+    private func scheduleSave() {
+        saveTask?.cancel()
+        saveTask = Task {
+            try? await Task.sleep(for: .seconds(1))
+            guard !Task.isCancelled else { return }
+            performSave()
+        }
+    }
+
+    private func performSave() {
         let stored = StoredHistory(
             history: history,
             favourites: favourites,
@@ -89,8 +99,27 @@ struct CommandEntry: Identifiable, Codable, Hashable {
 }
 
 private struct StoredHistory: Codable {
-    let history: [CommandEntry]
-    let favourites: [CommandEntry]
-    let quickInsertEnabled: Bool
-    let hasAskedAboutQuickInsert: Bool
+    var history: [CommandEntry]
+    var favourites: [CommandEntry]
+    var quickInsertEnabled: Bool
+    var hasAskedAboutQuickInsert: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case history, favourites, quickInsertEnabled, hasAskedAboutQuickInsert
+    }
+
+    init(history: [CommandEntry], favourites: [CommandEntry], quickInsertEnabled: Bool, hasAskedAboutQuickInsert: Bool) {
+        self.history = history
+        self.favourites = favourites
+        self.quickInsertEnabled = quickInsertEnabled
+        self.hasAskedAboutQuickInsert = hasAskedAboutQuickInsert
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        history = try container.decode([CommandEntry].self, forKey: .history)
+        favourites = try container.decode([CommandEntry].self, forKey: .favourites)
+        quickInsertEnabled = try container.decodeIfPresent(Bool.self, forKey: .quickInsertEnabled) ?? true
+        hasAskedAboutQuickInsert = try container.decodeIfPresent(Bool.self, forKey: .hasAskedAboutQuickInsert) ?? false
+    }
 }

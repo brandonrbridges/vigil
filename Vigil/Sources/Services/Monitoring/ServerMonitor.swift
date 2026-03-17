@@ -3,8 +3,6 @@ import Foundation
 actor ServerMonitor {
     let connection: SSHConnection
     private var pollTask: Task<Void, Never>?
-    private var metricsHandler: ((ServerMetrics) -> Void)?
-
     /// Single combined command that collects all metrics in one SSH call.
     /// Each section is delimited by a marker line for reliable parsing.
     private static let metricsCommand = """
@@ -24,7 +22,6 @@ actor ServerMonitor {
     }
 
     func startPolling(interval: TimeInterval = 5, handler: @escaping @Sendable (ServerMetrics) -> Void) {
-        metricsHandler = handler
         pollTask?.cancel()
         pollTask = Task {
             while !Task.isCancelled {

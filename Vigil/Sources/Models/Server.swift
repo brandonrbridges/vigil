@@ -18,10 +18,30 @@ struct Server: Identifiable, Codable, Hashable {
     ) {
         self.id = id
         self.nickname = nickname.trimmingCharacters(in: .whitespacesAndNewlines)
-        self.host = host.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.host = Self.sanitizeHostname(host.trimmingCharacters(in: .whitespacesAndNewlines))
         self.port = max(1, min(65535, port))
-        self.username = username.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.username = Self.sanitizeUsername(username.trimmingCharacters(in: .whitespacesAndNewlines))
         self.authMethod = authMethod
+    }
+
+    /// Strips characters not matching `[a-zA-Z0-9._-]` from a hostname string.
+    static func sanitizeHostname(_ input: String) -> String {
+        String(input.unicodeScalars.filter { scalar in
+            CharacterSet.alphanumerics.contains(scalar)
+                || scalar == "."
+                || scalar == "_"
+                || scalar == "-"
+        })
+    }
+
+    /// Strips characters not matching `[a-zA-Z0-9._-]` from a username string.
+    private static func sanitizeUsername(_ input: String) -> String {
+        String(input.unicodeScalars.filter { scalar in
+            CharacterSet.alphanumerics.contains(scalar)
+                || scalar == "."
+                || scalar == "_"
+                || scalar == "-"
+        })
     }
 
     var displayName: String {

@@ -8,7 +8,7 @@ final class ConnectionManager {
     private var dockerServices: [UUID: DockerService] = [:]
     private var sftpServices: [UUID: SFTPService] = [:]
     private var prefetchTasks: [UUID: Task<Void, Never>] = [:]
-    private var connectedServers: [UUID: Server] = [:]
+    private(set) var connectedServers: [UUID: Server] = [:]
     var metrics: [UUID: ServerMetrics] = [:]
     var cpuHistory: [UUID: [CPUDataPoint]] = [:]
     var dockerContainers: [UUID: [DockerContainer]] = [:]
@@ -93,7 +93,8 @@ final class ConnectionManager {
 
     /// Disconnect all servers and clean up all sockets — call on app termination
     func disconnectAll() async {
-        for (_, server) in connectedServers {
+        let servers = Array(connectedServers.values)
+        for server in servers {
             await disconnect(from: server)
         }
     }
@@ -142,5 +143,13 @@ final class ConnectionManager {
         process.standardOutput = FileHandle.nullDevice
         process.standardError = FileHandle.nullDevice
         try? process.run()
+        process.waitUntilExit()
+    }
+
+    /// Synchronously clean up all SSH sockets — safe to call during app termination
+    nonisolated func cleanupAllSocketsSync(servers: [Server]) {
+        for server in servers {
+            cleanupSSHSocket(for: server)
+        }
     }
 }

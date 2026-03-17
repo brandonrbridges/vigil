@@ -267,9 +267,7 @@ struct ContainerInspector: View {
     private func fetchLogs() async {
         guard let docker = connectionManager.dockerService(for: server.id) else { return }
         let result = await docker.logs(for: container.id)
-        await MainActor.run {
-            logs = result
-        }
+        logs = result
     }
 
     private func performAction(_ action: @escaping (DockerService) async throws -> Void) {

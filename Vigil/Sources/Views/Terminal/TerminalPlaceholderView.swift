@@ -107,11 +107,20 @@ struct TerminalPlaceholderView: View {
     }
 
     private func writeToTerminal(_ command: String) {
-        guard terminalFD >= 0 else { return }
-        let data = Data(command.utf8)
         let fd = terminalFD
-        data.withUnsafeBytes { ptr in
-            _ = write(fd, ptr.baseAddress!, ptr.count)
+        guard fd >= 0 else { return }
+        DispatchQueue.global(qos: .userInitiated).async {
+            var data = Data(command.utf8)
+            data.withUnsafeBytes { ptr in
+                var remaining = ptr.count
+                var offset = 0
+                while remaining > 0 {
+                    let written = write(fd, ptr.baseAddress! + offset, remaining)
+                    if written <= 0 { break }
+                    offset += written
+                    remaining -= written
+                }
+            }
         }
     }
 }
@@ -132,6 +141,10 @@ private struct CommandHistorySidebar: View {
         )
     }
 
+    private var serverFavourites: [CommandEntry] {
+        commandHistory.favourites.filter { $0.serverID == server.id }
+    }
+
     var body: some View {
         @Bindable var history = commandHistory
 
@@ -141,12 +154,12 @@ private struct CommandHistorySidebar: View {
             }
 
             Section("Favourites") {
-                if commandHistory.favourites.isEmpty {
+                if serverFavourites.isEmpty {
                     Text("No favourites yet")
                         .foregroundStyle(.secondary)
                         .font(.callout)
                 } else {
-                    ForEach(commandHistory.favourites) { entry in
+                    ForEach(serverFavourites) { entry in
                         CommandRow(
                             entry: entry,
                             isFavourite: true,

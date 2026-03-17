@@ -144,7 +144,7 @@ struct SSHTerminalView: NSViewRepresentable {
 
                 // Strip basic ANSI escape sequences
                 let cleaned = text.replacingOccurrences(
-                    of: #"\x1b(\[[0-9;?]*[a-zA-Z@]|\][^\x07]*\x07|\(B)"#,
+                    of: #"\x1b(\[[0-9;?]*[a-zA-Z@]|\][^\x07]*\x07|\(B|P[^\x1b]*\x1b\\|[>=])"#,
                     with: "",
                     options: .regularExpression
                 )
@@ -211,6 +211,8 @@ class TerminalTextView: NSTextView {
         case 126: // Up arrow
             bytes = Data("\u{1b}[A".utf8)
         default:
+            // Ctrl+key combos (Ctrl+C = \u{03}, Ctrl+D = \u{04}, Ctrl+Z = \u{1a}) are handled
+            // here automatically — AppKit's event.characters returns the control code directly.
             if let chars = event.characters {
                 bytes = Data(chars.utf8)
             }

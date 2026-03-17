@@ -14,9 +14,8 @@ struct VigilApp: App {
                 .environment(connectionManager)
                 .environment(commandHistory)
                 .onReceive(NotificationCenter.default.publisher(for: NSApplication.willTerminateNotification)) { _ in
-                    Task { @MainActor in
-                        await connectionManager.disconnectAll()
-                    }
+                    let servers = Array(connectionManager.connectedServers.values)
+                    connectionManager.cleanupAllSocketsSync(servers: servers)
                 }
         }
         .windowStyle(.automatic)

@@ -133,8 +133,36 @@ struct ServerSidebar: View {
         } message: { server in
             Text("This will remove \(server.displayName) and its saved credentials.")
         }
+        .onChange(of: serverManager.selectedServerID) { _, _ in
+            serverManager.persistSelection()
+        }
         .task {
             await probeHosts()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .addServer)) { _ in
+            activeSheet = .add
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .editServer)) { _ in
+            if let id = serverManager.selectedServerID,
+               let server = serverManager.servers.first(where: { $0.id == id }) {
+                activeSheet = .edit(server)
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .reconnectServer)) { _ in
+            if let id = serverManager.selectedServerID,
+               let server = serverManager.servers.first(where: { $0.id == id }) {
+                Task {
+                    await connectionManager.reconnect(server: server)
+                }
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .disconnectServer)) { _ in
+            if let id = serverManager.selectedServerID,
+               let server = serverManager.servers.first(where: { $0.id == id }) {
+                Task {
+                    await connectionManager.disconnect(from: server)
+                }
+            }
         }
     }
 

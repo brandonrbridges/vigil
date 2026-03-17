@@ -52,12 +52,28 @@ final class ServerManager {
         }
     }
 
+    func selectServer(_ id: UUID?) {
+        selectedServerID = id
+        saveServers()
+    }
+
+    /// Persist the current selection without changing it.
+    func persistSelection() {
+        saveServers()
+    }
+
     private func loadServers() {
         guard FileManager.default.fileExists(atPath: storageURL.path) else { return }
         do {
             let data = try Data(contentsOf: storageURL)
-            servers = try JSONDecoder().decode([Server].self, from: data)
-            selectedServerID = servers.first?.id
+            // Try new format first, fall back to legacy array format
+            if let snapshot = try? JSONDecoder().decode(ServerSnapshot.self, from: data) {
+                servers = snapshot.servers
+                selectedServerID = snapshot.selectedServerID ?? servers.first?.id
+            } else {
+                servers = try JSONDecoder().decode([Server].self, from: data)
+                selectedServerID = servers.first?.id
+            }
         } catch {
             print("Failed to load servers: \(error)")
         }
@@ -65,10 +81,16 @@ final class ServerManager {
 
     private func saveServers() {
         do {
-            let data = try JSONEncoder().encode(servers)
+            let snapshot = ServerSnapshot(servers: servers, selectedServerID: selectedServerID)
+            let data = try JSONEncoder().encode(snapshot)
             try data.write(to: storageURL, options: .atomic)
         } catch {
             print("Failed to save servers: \(error)")
         }
     }
+}
+
+private struct ServerSnapshot: Codable {
+    var servers: [Server]
+    var selectedServerID: UUID?
 }

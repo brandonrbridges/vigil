@@ -15,6 +15,7 @@ final class ConnectionManager {
     var connectionStates: [UUID: ConnectionState] = [:]
 
     private let maxHistoryPoints = 60
+    private let notificationService = NotificationService.shared
 
     enum ConnectionState: Equatable, Sendable {
         case disconnected
@@ -54,6 +55,19 @@ final class ConnectionManager {
                         history.removeFirst(history.count - (self?.maxHistoryPoints ?? 60))
                     }
                     self?.cpuHistory[serverID] = history
+
+                    // Check thresholds and send notifications
+                    if let self,
+                       let state = self.connectionStates[serverID],
+                       let server = self.connectedServers[serverID] {
+                        self.notificationService.recordPollSuccess(serverID: serverID)
+                        self.notificationService.checkAndNotify(
+                            serverID: serverID,
+                            serverName: server.displayName,
+                            metrics: newMetrics,
+                            state: state
+                        )
+                    }
                 }
             }
 
@@ -86,6 +100,7 @@ final class ConnectionManager {
         metrics.removeValue(forKey: server.id)
         connectedServers.removeValue(forKey: server.id)
         connectionStates[server.id] = .disconnected
+        notificationService.clearState(for: server.id)
 
         // Clean up SSH ControlMaster socket
         cleanupSSHSocket(for: server)

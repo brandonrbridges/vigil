@@ -9,8 +9,10 @@
 /* Begin PBXBuildFile section */
 		05D3BF5164473BC924194CC6 /* EditServerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E177F4A6F24FAF07E3A30C10 /* EditServerSheet.swift */; };
 		1039ABF315B1A996773E2BF5 /* Server.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F50AE703E0D100B87B5D5F2 /* Server.swift */; };
+		250336C40DE6C409E569AE3D /* MetricParserCorrectnessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FD927CD3D814445648BAE9F /* MetricParserCorrectnessTests.swift */; };
 		25146F6B6B966A52043C99DC /* SSHConfigParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ADC13BA03FA89874350F035 /* SSHConfigParser.swift */; };
 		2CACC21A7CC4094421F42F07 /* ConnectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D955FA56E0A8E1BCF7F7B2E /* ConnectionManager.swift */; };
+		2FB6AA0493E9B406B70552E7 /* MetricParserPerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3166BC14ACA57EA1A9ABDE36 /* MetricParserPerformanceTests.swift */; };
 		3B27E7489D0CD9BE23C5AF5E /* CommandHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE6104EBEE3DE4C1CC8B8DB8 /* CommandHistory.swift */; };
 		3B660731D8D224287A5A2FBD /* SFTPService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B652460FC8ED85E3F6AD3777 /* SFTPService.swift */; };
 		3DA4062040F452162F87EEE4 /* FilesPlaceholderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BB688237210FE942D1A19E1 /* FilesPlaceholderView.swift */; };
@@ -38,6 +40,16 @@
 		F483D69B960FEFA7F9A0BB05 /* DockerContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1916B1A3306DB4F8FFFB663E /* DockerContainer.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		DDCC8931B5121BBC4DBFBF47 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 2171B6E0E71429C80C35FBE9 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6161E4DB5FF004CE4CB88A49;
+			remoteInfo = Vigil;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		020E4A3BC6F6776F06406290 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
 		0D955FA56E0A8E1BCF7F7B2E /* ConnectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionManager.swift; sourceTree = "<group>"; };
@@ -45,6 +57,7 @@
 		137DB2A5F411024088A60D0E /* SSHKeyDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHKeyDetector.swift; sourceTree = "<group>"; };
 		1916B1A3306DB4F8FFFB663E /* DockerContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockerContainer.swift; sourceTree = "<group>"; };
 		2EE596148249184F5AEDA5EC /* AddServerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddServerSheet.swift; sourceTree = "<group>"; };
+		3166BC14ACA57EA1A9ABDE36 /* MetricParserPerformanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricParserPerformanceTests.swift; sourceTree = "<group>"; };
 		405403E11C486D37D312C798 /* DockerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockerView.swift; sourceTree = "<group>"; };
 		47DB1A04CBD60087E76E1844 /* TerminalPlaceholderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalPlaceholderView.swift; sourceTree = "<group>"; };
 		4ADC13BA03FA89874350F035 /* SSHConfigParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHConfigParser.swift; sourceTree = "<group>"; };
@@ -53,12 +66,14 @@
 		630ABD00E56417EC43535CED /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
 		6F28C7A77761F66DE434A0D7 /* SSHTerminalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHTerminalView.swift; sourceTree = "<group>"; };
 		7E9D071A98F2CD459A87D3C9 /* ServerMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerMonitor.swift; sourceTree = "<group>"; };
+		7FD927CD3D814445648BAE9F /* MetricParserCorrectnessTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricParserCorrectnessTests.swift; sourceTree = "<group>"; };
 		86055CD67830EB1AA7866880 /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
 		8BB688237210FE942D1A19E1 /* FilesPlaceholderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilesPlaceholderView.swift; sourceTree = "<group>"; };
 		8BEE6BA168DEA85C701D3439 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
 		930494C069664AAC2F141221 /* SSHProber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHProber.swift; sourceTree = "<group>"; };
 		94C83C6022721F345CA1F785 /* ServerSidebar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerSidebar.swift; sourceTree = "<group>"; };
 		973049085D16CB030E57B053 /* ServerManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerManager.swift; sourceTree = "<group>"; };
+		A3A079141EE3396A0D619BED /* VigilTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = VigilTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A518FA72F53DD7D901A0CBC9 /* MetricParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricParser.swift; sourceTree = "<group>"; };
 		AF55702A66A516CAAB2A5370 /* DockerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockerService.swift; sourceTree = "<group>"; };
 		B652460FC8ED85E3F6AD3777 /* SFTPService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFTPService.swift; sourceTree = "<group>"; };
@@ -191,8 +206,18 @@
 			isa = PBXGroup;
 			children = (
 				B85D36572956AF65600CE196 /* Vigil.app */,
+				A3A079141EE3396A0D619BED /* VigilTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		9A7263839FC67DB70B23A6C6 /* VigilTests */ = {
+			isa = PBXGroup;
+			children = (
+				7FD927CD3D814445648BAE9F /* MetricParserCorrectnessTests.swift */,
+				3166BC14ACA57EA1A9ABDE36 /* MetricParserPerformanceTests.swift */,
+			);
+			path = VigilTests;
 			sourceTree = "<group>";
 		};
 		A387C17EFDB1573F67A1ECE0 /* App */ = {
@@ -208,6 +233,7 @@
 			isa = PBXGroup;
 			children = (
 				D558645DED43326B339E8444 /* Vigil */,
+				9A7263839FC67DB70B23A6C6 /* VigilTests */,
 				992B83762E2C36747F2A9A79 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -247,6 +273,24 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		53D580ABFFAC14CA00CBE7F5 /* VigilTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C04685F46C7642D3F64A63DD /* Build configuration list for PBXNativeTarget "VigilTests" */;
+			buildPhases = (
+				C785AC39878B4202E81C1BCA /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				6F5EC6E5617F31443D8BA974 /* PBXTargetDependency */,
+			);
+			name = VigilTests;
+			packageProductDependencies = (
+			);
+			productName = VigilTests;
+			productReference = A3A079141EE3396A0D619BED /* VigilTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		6161E4DB5FF004CE4CB88A49 /* Vigil */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = D98D3580FD17823E379672D1 /* Build configuration list for PBXNativeTarget "Vigil" */;
@@ -288,6 +332,7 @@
 			projectRoot = "";
 			targets = (
 				6161E4DB5FF004CE4CB88A49 /* Vigil */,
+				53D580ABFFAC14CA00CBE7F5 /* VigilTests */,
 			);
 		};
 /* End PBXProject section */
@@ -329,9 +374,44 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C785AC39878B4202E81C1BCA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				250336C40DE6C409E569AE3D /* MetricParserCorrectnessTests.swift in Sources */,
+				2FB6AA0493E9B406B70552E7 /* MetricParserPerformanceTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		6F5EC6E5617F31443D8BA974 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6161E4DB5FF004CE4CB88A49 /* Vigil */;
+			targetProxy = DDCC8931B5121BBC4DBFBF47 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		27DCBA49F20453C32C5C74AE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_ENTITLEMENTS = Vigil/Vigil.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.vigil.tests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Vigil.app/Contents/MacOS/Vigil";
+			};
+			name = Release;
+		};
 		33E59D603E1AB052C033B287 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -493,6 +573,24 @@
 			};
 			name = Release;
 		};
+		FC4BD5ACD04A427AF889A5CE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_ENTITLEMENTS = Vigil/Vigil.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.vigil.tests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Vigil.app/Contents/MacOS/Vigil";
+			};
+			name = Debug;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -501,6 +599,15 @@
 			buildConfigurations = (
 				33E59D603E1AB052C033B287 /* Debug */,
 				642C963C4E0FB2B70D8A83F1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		C04685F46C7642D3F64A63DD /* Build configuration list for PBXNativeTarget "VigilTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FC4BD5ACD04A427AF889A5CE /* Debug */,
+				27DCBA49F20453C32C5C74AE /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

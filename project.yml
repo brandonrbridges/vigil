@@ -33,3 +33,19 @@ targets:
       properties:
         com.apple.security.app-sandbox: false
         com.apple.security.network.client: true
+  VigilTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - VigilTests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.vigil.tests
+        GENERATE_INFOPLIST_FILE: YES
+    dependencies:
+      - target: Vigil
+    entitlements:
+      path: Vigil/Vigil.entitlements
+      properties:
+        com.apple.security.app-sandbox: false
+        com.apple.security.network.client: true

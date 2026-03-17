@@ -108,7 +108,7 @@ struct ServerSidebar: View {
                 } label: {
                     Image(systemName: "plus")
                 }
-                .keyboardShortcut("n", modifiers: .command)
+
             }
         }
         .sheet(item: $activeSheet) { sheet in

@@ -54,13 +54,12 @@ private struct GeneralSettingsTab: View {
                 }
             }
 
-            Toggle("Launch at login", isOn: $settings.launchAtLogin)
         }
         .formStyle(.grouped)
-        .onChange(of: settings.pollingInterval) { _, _ in settings.save() }
-        .onChange(of: settings.defaultUsername) { _, _ in settings.save() }
-        .onChange(of: settings.defaultSSHKeyPath) { _, _ in settings.save() }
-        .onChange(of: settings.launchAtLogin) { _, _ in settings.save() }
+        .onChange(of: settings.pollingInterval) { _, _ in settings.scheduleSave() }
+        .onChange(of: settings.defaultUsername) { _, _ in settings.scheduleSave() }
+        .onChange(of: settings.defaultSSHKeyPath) { _, _ in settings.scheduleSave() }
+        .onDisappear { settings.save() }
     }
 }
 
@@ -98,18 +97,17 @@ private struct NotificationSettingsTab: View {
                     }
                 }
 
-                Toggle("Container stopped", isOn: $settings.notifyContainerStopped)
             }
             .disabled(!settings.notificationsEnabled)
         }
         .formStyle(.grouped)
-        .onChange(of: settings.notificationsEnabled) { _, _ in settings.save() }
-        .onChange(of: settings.notifyServerUnreachable) { _, _ in settings.save() }
-        .onChange(of: settings.notifyCPUAboveThreshold) { _, _ in settings.save() }
-        .onChange(of: settings.cpuThreshold) { _, _ in settings.save() }
-        .onChange(of: settings.notifyDiskAboveThreshold) { _, _ in settings.save() }
-        .onChange(of: settings.diskThreshold) { _, _ in settings.save() }
-        .onChange(of: settings.notifyContainerStopped) { _, _ in settings.save() }
+        .onChange(of: settings.notificationsEnabled) { _, _ in settings.scheduleSave() }
+        .onChange(of: settings.notifyServerUnreachable) { _, _ in settings.scheduleSave() }
+        .onChange(of: settings.notifyCPUAboveThreshold) { _, _ in settings.scheduleSave() }
+        .onChange(of: settings.cpuThreshold) { _, _ in settings.scheduleSave() }
+        .onChange(of: settings.notifyDiskAboveThreshold) { _, _ in settings.scheduleSave() }
+        .onChange(of: settings.diskThreshold) { _, _ in settings.scheduleSave() }
+        .onDisappear { settings.save() }
     }
 }
 
@@ -128,7 +126,7 @@ private struct AboutSettingsTab: View {
                 .font(.title)
                 .fontWeight(.bold)
 
-            Text("Version 1.0.0")
+            Text("Version \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0")")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
 
@@ -139,7 +137,7 @@ private struct AboutSettingsTab: View {
                 .font(.callout)
                 .foregroundStyle(.secondary)
 
-            Text("https://github.com/yourusername/vigil")
+            Text("https://github.com/brandonrbridges/vigil")
                 .font(.callout)
                 .foregroundStyle(.tertiary)
                 .textSelection(.enabled)

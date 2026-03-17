@@ -15,7 +15,14 @@ final class ConnectionManager {
     var connectionStates: [UUID: ConnectionState] = [:]
 
     private let maxHistoryPoints = 60
-    private let notificationService = NotificationService.shared
+    private(set) var notificationService: NotificationService?
+    var appSettings: AppSettings?
+
+    /// Configure with shared AppSettings and create the NotificationService
+    func configure(settings: AppSettings) {
+        self.appSettings = settings
+        self.notificationService = NotificationService(settings: settings)
+    }
 
     enum ConnectionState: Equatable, Sendable {
         case disconnected
@@ -45,7 +52,7 @@ final class ConnectionManager {
             monitors[server.id] = monitor
 
             let serverID = server.id
-            await monitor.startPolling { [weak self] newMetrics in
+            await monitor.startPolling(interval: TimeInterval(appSettings?.pollingInterval ?? 5)) { [weak self] newMetrics in
                 Task { @MainActor in
                     self?.metrics[serverID] = newMetrics
                     let point = CPUDataPoint(timestamp: newMetrics.timestamp, usage: newMetrics.cpu.usagePercent)
@@ -60,8 +67,8 @@ final class ConnectionManager {
                     if let self,
                        let state = self.connectionStates[serverID],
                        let server = self.connectedServers[serverID] {
-                        self.notificationService.recordPollSuccess(serverID: serverID)
-                        self.notificationService.checkAndNotify(
+                        self.notificationService?.recordPollSuccess(serverID: serverID)
+                        self.notificationService?.checkAndNotify(
                             serverID: serverID,
                             serverName: server.displayName,
                             metrics: newMetrics,
@@ -100,7 +107,7 @@ final class ConnectionManager {
         metrics.removeValue(forKey: server.id)
         connectedServers.removeValue(forKey: server.id)
         connectionStates[server.id] = .disconnected
-        notificationService.clearState(for: server.id)
+        notificationService?.clearState(for: server.id)
 
         // Clean up SSH ControlMaster socket
         cleanupSSHSocket(for: server)

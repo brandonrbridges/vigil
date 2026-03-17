@@ -3,12 +3,10 @@ import UserNotifications
 
 @MainActor
 final class NotificationService {
-    static let shared = NotificationService()
-
     private var firedAlerts: [UUID: Set<String>] = [:]
     private var failureCounts: [UUID: Int] = [:]
 
-    private let settings: AppSettings
+    let settings: AppSettings
 
     // Notification category identifiers
     private enum Category {
@@ -18,8 +16,8 @@ final class NotificationService {
         static let containerStopped = "containerStopped"
     }
 
-    private init() {
-        self.settings = AppSettings.default
+    init(settings: AppSettings) {
+        self.settings = settings
         registerCategories()
     }
 

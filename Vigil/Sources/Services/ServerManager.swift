@@ -8,6 +8,7 @@ final class ServerManager {
     var selectedServerID: UUID?
 
     private let storageURL: URL
+    private var saveTask: Task<Void, Never>?
 
     var selectedServer: Server? {
         guard let id = selectedServerID else { return nil }
@@ -54,12 +55,21 @@ final class ServerManager {
 
     func selectServer(_ id: UUID?) {
         selectedServerID = id
-        saveServers()
+        scheduleSave()
     }
 
     /// Persist the current selection without changing it.
     func persistSelection() {
-        saveServers()
+        scheduleSave()
+    }
+
+    private func scheduleSave() {
+        saveTask?.cancel()
+        saveTask = Task {
+            try? await Task.sleep(for: .seconds(1))
+            guard !Task.isCancelled else { return }
+            saveServers()
+        }
     }
 
     private func loadServers() {
@@ -93,4 +103,15 @@ final class ServerManager {
 private struct ServerSnapshot: Codable {
     var servers: [Server]
     var selectedServerID: UUID?
+
+    init(servers: [Server], selectedServerID: UUID?) {
+        self.servers = servers
+        self.selectedServerID = selectedServerID
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        servers = try container.decodeIfPresent([Server].self, forKey: .servers) ?? []
+        selectedServerID = try container.decodeIfPresent(UUID.self, forKey: .selectedServerID)
+    }
 }

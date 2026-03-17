@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 @MainActor
-final class StatusBarManager {
+final class StatusBarManager: NSObject {
     private var statusItem: NSStatusItem?
     private let serverManager: ServerManager
     private let connectionManager: ConnectionManager
@@ -11,6 +11,7 @@ final class StatusBarManager {
     init(serverManager: ServerManager, connectionManager: ConnectionManager) {
         self.serverManager = serverManager
         self.connectionManager = connectionManager
+        super.init()
         setupStatusItem()
         startObserving()
     }
@@ -75,7 +76,7 @@ final class StatusBarManager {
         if let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "Server status") {
             let config = NSImage.SymbolConfiguration(pointSize: 16, weight: .medium)
             let configured = image.withSymbolConfiguration(config) ?? image
-            configured.isTemplate = true
+            configured.isTemplate = false
             button.image = configured
         }
 

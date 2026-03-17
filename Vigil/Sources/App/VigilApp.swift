@@ -17,6 +17,8 @@ struct VigilApp: App {
                 .environment(commandHistory)
                 .environment(appSettings)
                 .task {
+                    connectionManager.configure(settings: appSettings)
+                    connectionManager.notificationService?.requestPermission()
                     statusBar = StatusBarManager(
                         serverManager: serverManager,
                         connectionManager: connectionManager
@@ -62,7 +64,5 @@ struct VigilApp: App {
         }
     }
 
-    init() {
-        NotificationService.shared.requestPermission()
-    }
+    init() {}
 }
